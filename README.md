@@ -16,7 +16,7 @@ sudo apt install -y build-essential cmake ninja-build git \
 ### 2. Клонировать репозиторий
 
 ```bash
-git clone https://github.com/<аккаунт>/whiteboard.git
+git clone https://github.com/YoungGentleman/Online-Whiteboard.git
 cd whiteboard
 ```
 
