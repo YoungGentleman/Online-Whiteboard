@@ -123,6 +123,8 @@ void MainWindow::setupToolBar()
     QToolBar *toolbar = addToolBar("Инструменты");
     toolbar->setObjectName("mainToolbar");
     toolbar->setMovable(false);
+    // запрещаем контекстное меню с галочкой "показать/скрыть"
+    toolbar->setContextMenuPolicy(Qt::PreventContextMenu);
 
     // --- инструменты рисования ---
     m_actPencil   = toolbar->addAction("Карандаш");
@@ -130,36 +132,49 @@ void MainWindow::setupToolBar()
     m_actEllipse  = toolbar->addAction("Эллипс");
     m_actTriangle = toolbar->addAction("Треугольник");
     m_actEraser   = toolbar->addAction("Ластик");
+    m_actFill     = toolbar->addAction("Заливка");
 
-    for (QAction *a : {m_actPencil, m_actRect, m_actEllipse, m_actTriangle, m_actEraser})
+    for (QAction *a : {m_actPencil, m_actRect, m_actEllipse,
+                       m_actTriangle, m_actEraser, m_actFill})
         a->setCheckable(true);
     m_actPencil->setChecked(true);
 
+    // вспомогательный список для сброса галочек
+    auto allTools = [this]() {
+        return QList<QAction*>{m_actPencil, m_actRect, m_actEllipse,
+                               m_actTriangle, m_actEraser, m_actFill};
+    };
+
     // переключение инструментов
-    connect(m_actPencil,   &QAction::triggered, this, [this]() {
-        m_canvas->setToolPencil();
-        for (auto *a : {m_actPencil,m_actRect,m_actEllipse,m_actTriangle,m_actEraser}) a->setChecked(false);
+    connect(m_actPencil,   &QAction::triggered, this, [this, allTools]() {
+        for (auto *a : allTools()) a->setChecked(false);
         m_actPencil->setChecked(true);
+        m_canvas->setToolPencil();
     });
-    connect(m_actRect,     &QAction::triggered, this, [this]() {
-        m_canvas->setToolRect();
-        for (auto *a : {m_actPencil,m_actRect,m_actEllipse,m_actTriangle,m_actEraser}) a->setChecked(false);
+    connect(m_actRect,     &QAction::triggered, this, [this, allTools]() {
+        for (auto *a : allTools()) a->setChecked(false);
         m_actRect->setChecked(true);
+        m_canvas->setToolRect();
     });
-    connect(m_actEllipse,  &QAction::triggered, this, [this]() {
-        m_canvas->setToolEllipse();
-        for (auto *a : {m_actPencil,m_actRect,m_actEllipse,m_actTriangle,m_actEraser}) a->setChecked(false);
+    connect(m_actEllipse,  &QAction::triggered, this, [this, allTools]() {
+        for (auto *a : allTools()) a->setChecked(false);
         m_actEllipse->setChecked(true);
+        m_canvas->setToolEllipse();
     });
-    connect(m_actTriangle, &QAction::triggered, this, [this]() {
-        m_canvas->setToolTriangle();
-        for (auto *a : {m_actPencil,m_actRect,m_actEllipse,m_actTriangle,m_actEraser}) a->setChecked(false);
+    connect(m_actTriangle, &QAction::triggered, this, [this, allTools]() {
+        for (auto *a : allTools()) a->setChecked(false);
         m_actTriangle->setChecked(true);
+        m_canvas->setToolTriangle();
     });
-    connect(m_actEraser,   &QAction::triggered, this, [this]() {
-        m_canvas->setToolEraser();
-        for (auto *a : {m_actPencil,m_actRect,m_actEllipse,m_actTriangle,m_actEraser}) a->setChecked(false);
+    connect(m_actEraser,   &QAction::triggered, this, [this, allTools]() {
+        for (auto *a : allTools()) a->setChecked(false);
         m_actEraser->setChecked(true);
+        m_canvas->setToolEraser();
+    });
+    connect(m_actFill,     &QAction::triggered, this, [this, allTools]() {
+        for (auto *a : allTools()) a->setChecked(false);
+        m_actFill->setChecked(true);
+        m_canvas->setToolFill();
     });
 
     toolbar->addSeparator();

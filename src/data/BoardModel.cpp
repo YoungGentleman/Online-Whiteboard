@@ -56,6 +56,25 @@ void BoardModel::clear()
     emit boardCleared();
 }
 
+void BoardModel::fillObject(const QUuid &uuid, const QColor &color)
+{
+    auto obj = findByUuid(uuid);
+    if (!obj) {
+        qDebug() << "[BoardModel] fillObject: объект не найден";
+        return;
+    }
+    if (obj->type == ObjectType::Stroke) {
+        qDebug() << "[BoardModel] fillObject: кривые не заливаются";
+        return;
+    }
+    obj->filled    = true;
+    obj->fillColor = color;
+    qDebug() << "[BoardModel] залит объект uuid:"
+             << uuid.toString(QUuid::WithoutBraces).left(8)
+             << "цвет:" << color.name();
+    emit objectFilled(uuid, color);
+}
+
 std::shared_ptr<DrawObject> BoardModel::findByUuid(const QUuid &uuid) const
 {
     for (auto &obj : m_objects) {

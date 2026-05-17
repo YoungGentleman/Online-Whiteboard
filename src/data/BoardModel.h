@@ -17,6 +17,7 @@ public:
 
     void addObject(std::shared_ptr<DrawObject> obj);
     void removeObject(const QUuid &uuid);
+    void fillObject(const QUuid &uuid, const QColor &color);
     void clear();
 
     // ищем объект по uuid — нужно для удаления по сети
@@ -27,6 +28,7 @@ public:
 signals:
     void objectAdded(std::shared_ptr<DrawObject> obj);
     void objectRemoved(QUuid uuid);
+    void objectFilled(QUuid uuid, QColor color);
     void boardCleared();
 
 private:

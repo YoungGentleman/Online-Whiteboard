@@ -9,6 +9,7 @@
 #include "../tools/PencilTool.h"
 #include "../tools/ShapeTool.h"
 #include "../tools/EraserTool.h"
+#include "../tools/FillTool.h"
 
 // CanvasView — главный виджет рисования.
 // Обёртывает QGraphicsView + QGraphicsScene и связывает
@@ -26,6 +27,7 @@ public:
     void setToolEllipse();
     void setToolTriangle();
     void setToolEraser();
+    void setToolFill();
 
     // настройки текущего инструмента
     void setColor(const QColor &color);
@@ -49,6 +51,7 @@ public slots:
     // вызывается когда объект добавлен в модель (в т.ч. пришедший по сети)
     void onObjectAdded(std::shared_ptr<DrawObject> obj);
     void onObjectRemoved(QUuid uuid);
+    void onObjectFilled(QUuid uuid, QColor color);
     void onBoardCleared();
 
 protected:
@@ -71,6 +74,7 @@ private:
     ShapeTool    *m_ellipseTool  = nullptr;
     ShapeTool    *m_triangleTool = nullptr;
     EraserTool   *m_eraserTool   = nullptr;
+    FillTool     *m_fillTool     = nullptr;
 
     double m_zoomFactor = 1.0;
 

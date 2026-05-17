@@ -47,6 +47,7 @@ set(HEADERS
     src/tools/PencilTool.h
     src/tools/ShapeTool.h
     src/tools/EraserTool.h
+    src/tools/FillTool.h
 
     src/network/VectorClock.h
     src/network/PacketType.h

@@ -54,6 +54,7 @@ private:
     QAction  *m_actEllipse   = nullptr;
     QAction  *m_actTriangle  = nullptr;
     QAction  *m_actEraser    = nullptr;
+    QAction  *m_actFill      = nullptr;
 
     // кнопка выбора цвета в тулбаре
     QPushButton *m_colorBtn  = nullptr;

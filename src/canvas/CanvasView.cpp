@@ -31,6 +31,7 @@ CanvasView::CanvasView(BoardModel *model, QWidget *parent)
     m_ellipseTool  = new ShapeTool(ShapeTool::Shape::Ellipse, this);
     m_triangleTool = new ShapeTool(ShapeTool::Shape::Triangle, this);
     m_eraserTool   = new EraserTool(this);
+    m_fillTool     = new FillTool(this);
 
     // слушаем сигнал ластика
     connect(m_eraserTool, &EraserTool::eraseRequested,
@@ -38,11 +39,19 @@ CanvasView::CanvasView(BoardModel *model, QWidget *parent)
                 m_model->removeObject(uuid);
             });
 
-    // слушаем модель — если объект добавлен (например по сети), рисуем его
+    // слушаем сигнал заливки
+    connect(m_fillTool, &FillTool::fillRequested,
+            this, [this](QUuid uuid, QColor color) {
+                m_model->fillObject(uuid, color);
+            });
+
+    // слушаем модель
     connect(m_model, &BoardModel::objectAdded,
             this, &CanvasView::onObjectAdded);
     connect(m_model, &BoardModel::objectRemoved,
             this, &CanvasView::onObjectRemoved);
+    connect(m_model, &BoardModel::objectFilled,
+            this, &CanvasView::onObjectFilled);
     connect(m_model, &BoardModel::boardCleared,
             this, &CanvasView::onBoardCleared);
 
@@ -95,6 +104,15 @@ void CanvasView::setToolEraser()
     emit toolChanged("Ластик");
 }
 
+void CanvasView::setToolFill()
+{
+    m_tool = m_fillTool;
+    // курсор в виде руки — напоминает ведро
+    setCursor(Qt::PointingHandCursor);
+    qDebug() << "[CanvasView] инструмент: Заливка";
+    emit toolChanged("Заливка");
+}
+
 // ---------------------------------------------------------------------------
 // настройки стиля
 // ---------------------------------------------------------------------------
@@ -102,7 +120,8 @@ void CanvasView::setToolEraser()
 void CanvasView::setColor(const QColor &color)
 {
     m_color = color;
-    QList<DrawTool*> tools = {m_pencilTool, m_rectTool, m_ellipseTool, m_triangleTool};
+    QList<DrawTool*> tools = {m_pencilTool, m_rectTool, m_ellipseTool,
+                               m_triangleTool, m_fillTool};
     for (auto *t : tools)
         t->setColor(color);
 }
@@ -270,6 +289,28 @@ void CanvasView::onObjectRemoved(QUuid uuid)
     m_scene->removeItem(it.value());
     delete it.value();
     m_itemMap.erase(it);
+}
+
+void CanvasView::onObjectFilled(QUuid uuid, QColor color)
+{
+    auto it = m_itemMap.find(uuid);
+    if (it == m_itemMap.end()) {
+        qDebug() << "[CanvasView] onObjectFilled: item не найден";
+        return;
+    }
+
+    QBrush brush(color);
+
+    // обновляем заливку у нужного типа item
+    if (auto *r = dynamic_cast<QGraphicsRectItem*>(it.value())) {
+        r->setBrush(brush);
+    } else if (auto *e = dynamic_cast<QGraphicsEllipseItem*>(it.value())) {
+        e->setBrush(brush);
+    } else if (auto *p = dynamic_cast<QGraphicsPolygonItem*>(it.value())) {
+        p->setBrush(brush);
+    } else {
+        qDebug() << "[CanvasView] onObjectFilled: неподдерживаемый тип item";
+    }
 }
 
 void CanvasView::onBoardCleared()
