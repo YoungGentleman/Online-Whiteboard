@@ -9,9 +9,13 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QPushButton>
+#include <memory>
 
 #include "../canvas/CanvasView.h"
 #include "../data/BoardModel.h"
+#include "../network/NetworkManager.h"
+
+class Server;
 
 class MainWindow : public QMainWindow
 {
@@ -19,20 +23,37 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow() override = default;
+    ~MainWindow() override;
 
 protected:
     void closeEvent(QCloseEvent *event) override;
 
 private slots:
-    void onNewBoard();
+    void onNewBoard();                                          // menu File
     void onOpenFile();
     void onSaveFile();
-    void onCreateRoom();
+
+    void onCreateRoom();                                        // menu NEtwork 
     void onJoinRoom();
+    void onLeaveRoom();
+
     void onAbout();
+
     void onColorButtonClicked();
     void onPenWidthChanged(int value);
+    void onClearBoard();
+
+
+    void onNetConnected();                                      // Network
+    void onNetDisconnected();
+    void onNetError(const QString &msg);
+    void onSnapshotReceived(QVector<std::shared_ptr<DrawObject>> objects);
+    void onRemoteDraw (std::shared_ptr<DrawObject> obj);
+    void onRemoteErase(QUuid uuid);
+    void onRemoteClear();
+
+    void onLocalObjectCreated(std::shared_ptr<DrawObject> obj);
+    void onLocalObjectErased (QUuid uuid);
 
 private:
     void setupMenuBar();
@@ -41,9 +62,19 @@ private:
     static QWidget* makeSeparator();
     void updateWindowTitle(const QString &filename = {});
     void updateColorButton();
+    void updateConnectionStatus(const QString &text, bool ok);
+
+    void startHosting(quint16 port, const QString &roomName);
+    void joinAsClient(const QString &host, quint16 port, const QString &roomName);
+    void teardownNetwork();
 
     BoardModel  *m_model  = nullptr;
     CanvasView  *m_canvas = nullptr;
+
+    NetworkManager *m_network = nullptr;
+    Server         *m_localServer = nullptr;   
+
+    bool m_applyingRemote = false;
 
     QLabel   *m_statusTool       = nullptr;
     QLabel   *m_statusZoom       = nullptr;
@@ -55,7 +86,8 @@ private:
     QAction  *m_actTriangle  = nullptr;
     QAction  *m_actEraser    = nullptr;
 
-    // кнопка выбора цвета в тулбаре
+    QAction  *m_actLeaveRoom = nullptr;
+
     QPushButton *m_colorBtn  = nullptr;
     QSpinBox    *m_widthSpin = nullptr;
     QColor       m_currentColor = Qt::black;

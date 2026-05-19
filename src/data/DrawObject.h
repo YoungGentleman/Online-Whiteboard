@@ -1,5 +1,4 @@
 #pragma once
-
 #include <QUuid>
 #include <QColor>
 #include <QPainterPath>

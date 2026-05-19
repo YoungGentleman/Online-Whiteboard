@@ -3,14 +3,11 @@
 #include "DrawTool.h"
 #include <QGraphicsItem>
 
-// ластик — удаляет объект целиком при касании любой его точки.
-// не стирает попиксельно, а просто находит item под курсором и сигналит об удалении.
 class EraserTool : public DrawTool
 {
     Q_OBJECT
 
 signals:
-    // canvas слушает этот сигнал и удаляет объект из модели
     void eraseRequested(QUuid uuid);
 
 public:

@@ -1,12 +1,9 @@
 #pragma once
-
 #include <QDialog>
 #include <QLineEdit>
 #include <QSpinBox>
 #include <QLabel>
 #include <QPushButton>
-#include <QStackedWidget>
-
 
 class ConnectionDialog : public QDialog
 {
@@ -17,13 +14,14 @@ public:
 
     explicit ConnectionDialog(Mode mode, QWidget *parent = nullptr);
 
-
-    QString hostAddress() const;
+    Mode    mode()        const { return m_mode; }
+    QString hostAddress() const;    
     int     port()        const;
+    QString roomName()    const;
 
 private slots:
     void onConfirm();
-    void onFetchPublicIp();   // async HTTP request to api.ipify.org
+    void onFetchPublicIp();   // download from https://api.ipify.org
 
 private:
     void buildHostUi();
@@ -31,14 +29,16 @@ private:
 
     Mode        m_mode;
 
-    // Host mode widgets
+    // Host
     QLabel     *m_lblLocalIp   = nullptr;
     QLabel     *m_lblPublicIp  = nullptr;
     QSpinBox   *m_hostPort     = nullptr;
+    QLineEdit  *m_hostRoom     = nullptr;
 
-    // Client mode widgets
+    // Client
     QLineEdit  *m_editIp       = nullptr;
     QSpinBox   *m_clientPort   = nullptr;
+    QLineEdit  *m_clientRoom   = nullptr;
 
     QPushButton *m_btnConfirm  = nullptr;
 
