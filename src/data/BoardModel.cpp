@@ -1,5 +1,4 @@
 #include "BoardModel.h"
-
 #include <QDebug>
 
 // вспомогательная функция — название типа объекта для лога

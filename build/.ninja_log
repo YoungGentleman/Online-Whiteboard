@@ -1,0 +1,12 @@
+# ninja log v5
+3	756	1778974694126981965	whiteboard_autogen/timestamp	464ba954f15af33b
+3	756	1778974694126981965	whiteboard_autogen/mocs_compilation.cpp	464ba954f15af33b
+3	756	1778974694126981965	/home/alex/Desktop/Projects/Online-Whiteboard/build/whiteboard_autogen/timestamp	464ba954f15af33b
+3	756	1778974694126981965	/home/alex/Desktop/Projects/Online-Whiteboard/build/whiteboard_autogen/mocs_compilation.cpp	464ba954f15af33b
+757	2180	1778974695560162887	CMakeFiles/whiteboard.dir/src/main.cpp.o	d1dd47e7ed7054fb
+758	2241	1778974695620170456	CMakeFiles/whiteboard.dir/src/data/BoardModel.cpp.o	8eabff6d946fa203
+757	2343	1778974695723183448	CMakeFiles/whiteboard.dir/src/ui/ConnectionDialog.cpp.o	17cd5c0b6bbea400
+756	2764	1778974696144236524	CMakeFiles/whiteboard.dir/whiteboard_autogen/mocs_compilation.cpp.o	4d6b51d8a705191f
+757	2821	1778974696201243702	CMakeFiles/whiteboard.dir/src/ui/MainWindow.cpp.o	6644c01aefa2ae70
+758	2837	1778974696217245718	CMakeFiles/whiteboard.dir/src/canvas/CanvasView.cpp.o	60cdd7a2e415cdd7
+2838	3287	1778974696662205609	whiteboard	378d218009df5f1

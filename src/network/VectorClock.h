@@ -1,5 +1,4 @@
 #pragma once
-
 #include <QVector>
 #include <QDataStream>
 #include <QtGlobal>

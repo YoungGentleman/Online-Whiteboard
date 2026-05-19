@@ -267,11 +267,13 @@ void MainWindow::onSaveFile()
     // TODO коммит 3: сохранение через Serializer
 }
 
+
+//  here to do 
 void MainWindow::onCreateRoom()
 {
     ConnectionDialog dlg(ConnectionDialog::Mode::Host, this);
     dlg.exec();
-    // TODO коммит 3: передать настройки в NetworkManager
+    
 }
 
 void MainWindow::onJoinRoom()
