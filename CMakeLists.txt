@@ -42,6 +42,7 @@ add_executable(whiteboard
     src/tools/DrawTool.h
     src/tools/PencilTool.h
     src/tools/ShapeTool.h
+    src/tools/FillTool.h
     src/tools/EraserTool.h
 
 )
