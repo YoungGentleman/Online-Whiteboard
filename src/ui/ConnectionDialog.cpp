@@ -2,47 +2,30 @@
 
 #include <QFormLayout>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QDialogButtonBox>
-#include <QHostInfo>
 #include <QNetworkInterface>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QMessageBox>
-#include <QClipboard>
-#include <QApplication>
 
 ConnectionDialog::ConnectionDialog(Mode mode, QWidget *parent)
     : QDialog(parent), m_mode(mode)
 {
     setModal(true);
     setFixedWidth(380);
-
-    if (m_mode == Mode::Host) {
-        setWindowTitle(tr("Create room"));
-        buildHostUi();
-    } else {
-        setWindowTitle(tr("Join room"));
-        buildClientUi();
-    }
+    if (m_mode == Mode::Host) { setWindowTitle(tr("Create room")); buildHostUi(); }
+    else                      { setWindowTitle(tr("Join room"));   buildClientUi(); }
 }
-
-// ---------------------------------------------------------------------------
-// UI builders
-// ---------------------------------------------------------------------------
 
 void ConnectionDialog::buildHostUi()
 {
     auto *layout = new QVBoxLayout(this);
     layout->setSpacing(12);
 
-    // Detect local IP
     QString localIp = tr("(unavailable)");
-    const auto ifaces = QNetworkInterface::allAddresses();
-    for (const QHostAddress &addr : ifaces) {
+    for (const QHostAddress &addr : QNetworkInterface::allAddresses()) {
         if (!addr.isLoopback() && addr.protocol() == QAbstractSocket::IPv4Protocol) {
-            localIp = addr.toString();
-            break;
+            localIp = addr.toString(); break;
         }
     }
 
@@ -61,13 +44,10 @@ void ConnectionDialog::buildHostUi()
     m_hostPort->setRange(1024, 65535);
     m_hostPort->setValue(kDefaultPort);
     form->addRow(tr("Port:"), m_hostPort);
-
     layout->addLayout(form);
 
-    auto *note = new QLabel(
-        tr("<i>Share your Public IP and port with participants.<br>"
-           "Make sure the port is open in your firewall / router.</i>")
-    );
+    auto *note = new QLabel(tr("<i>Share your Public IP and port with participants.<br>"
+                               "Make sure the port is open in your firewall / router.</i>"));
     note->setWordWrap(true);
     note->setStyleSheet("color: gray; font-size: 11px;");
     layout->addWidget(note);
@@ -79,7 +59,6 @@ void ConnectionDialog::buildHostUi()
     m_btnConfirm->setText(tr("Start hosting"));
     layout->addWidget(btnBox);
 
-    // Fetch public IP asynchronously
     onFetchPublicIp();
 }
 
@@ -99,7 +78,6 @@ void ConnectionDialog::buildClientUi()
     m_clientPort->setRange(1024, 65535);
     m_clientPort->setValue(kDefaultPort);
     form->addRow(tr("Port:"), m_clientPort);
-
     layout->addLayout(form);
 
     auto *btnBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
@@ -109,10 +87,6 @@ void ConnectionDialog::buildClientUi()
     m_btnConfirm->setText(tr("Connect"));
     layout->addWidget(btnBox);
 }
-
-// ---------------------------------------------------------------------------
-// Slots
-// ---------------------------------------------------------------------------
 
 void ConnectionDialog::onConfirm()
 {
@@ -126,36 +100,25 @@ void ConnectionDialog::onConfirm()
 void ConnectionDialog::onFetchPublicIp()
 {
     if (m_mode != Mode::Host || !m_lblPublicIp) return;
-
     auto *nam = new QNetworkAccessManager(this);
-    QNetworkRequest req(QUrl("https://api.ipify.org"));
-    QNetworkReply *reply = nam->get(req);
-
+    QNetworkReply *reply = nam->get(QNetworkRequest(QUrl("https://api.ipify.org")));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        if (reply->error() == QNetworkReply::NoError) {
-            const QString ip = QString::fromUtf8(reply->readAll()).trimmed();
-            if (m_lblPublicIp) m_lblPublicIp->setText(ip);
-        } else {
-            if (m_lblPublicIp) m_lblPublicIp->setText(tr("(unavailable)"));
-        }
+        if (reply->error() == QNetworkReply::NoError)
+            m_lblPublicIp->setText(QString::fromUtf8(reply->readAll()).trimmed());
+        else
+            m_lblPublicIp->setText(tr("(unavailable)"));
         reply->deleteLater();
     });
 }
 
-// ---------------------------------------------------------------------------
-// Getters
-// ---------------------------------------------------------------------------
-
 QString ConnectionDialog::hostAddress() const
 {
-    if (m_mode == Mode::Client && m_editIp)
-        return m_editIp->text().trimmed();
-    return {};
+    return (m_mode == Mode::Client && m_editIp) ? m_editIp->text().trimmed() : QString{};
 }
 
 int ConnectionDialog::port() const
 {
-    if (m_mode == Mode::Host && m_hostPort) return m_hostPort->value();
+    if (m_mode == Mode::Host   && m_hostPort)   return m_hostPort->value();
     if (m_mode == Mode::Client && m_clientPort) return m_clientPort->value();
     return kDefaultPort;
 }

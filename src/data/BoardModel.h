@@ -6,8 +6,6 @@
 #include <QVector>
 #include <memory>
 
-// BoardModel хранит все объекты доски в порядке отрисовки.
-// В будущем (коммит 3) он же будет сериализоваться и гоняться по сети.
 class BoardModel : public QObject
 {
     Q_OBJECT
@@ -15,14 +13,13 @@ class BoardModel : public QObject
 public:
     explicit BoardModel(QObject *parent = nullptr);
 
-    void addObject(std::shared_ptr<DrawObject> obj);
-    void removeObject(const QUuid &uuid);
+    void addObject(std::shared_ptr<DrawObject> obj, bool fromNetwork = false);
+    void removeObject(const QUuid &uuid, bool fromNetwork = false);
     void fillObject(const QUuid &uuid, const QColor &color);
+    void updateObjectPosition(const QUuid &uuid, const QPointF &delta);
     void clear();
 
-    // ищем объект по uuid — нужно для удаления по сети
     std::shared_ptr<DrawObject> findByUuid(const QUuid &uuid) const;
-
     const QVector<std::shared_ptr<DrawObject>>& objects() const { return m_objects; }
 
 signals:
@@ -30,6 +27,9 @@ signals:
     void objectRemoved(QUuid uuid);
     void objectFilled(QUuid uuid, QColor color);
     void boardCleared();
+
+    void localObjectCreated(std::shared_ptr<DrawObject> obj);
+    void localObjectErased(QUuid uuid);
 
 private:
     QVector<std::shared_ptr<DrawObject>> m_objects;

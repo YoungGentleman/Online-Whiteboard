@@ -49,6 +49,7 @@ private:
     QLabel   *m_statusZoom       = nullptr;
     QLabel   *m_statusConnection = nullptr;
 
+    QAction  *m_actSelect    = nullptr;
     QAction  *m_actPencil    = nullptr;
     QAction  *m_actRect      = nullptr;
     QAction  *m_actEllipse   = nullptr;
@@ -56,7 +57,6 @@ private:
     QAction  *m_actEraser    = nullptr;
     QAction  *m_actFill      = nullptr;
 
-    // кнопка выбора цвета в тулбаре
     QPushButton *m_colorBtn  = nullptr;
     QSpinBox    *m_widthSpin = nullptr;
     QColor       m_currentColor = Qt::black;
