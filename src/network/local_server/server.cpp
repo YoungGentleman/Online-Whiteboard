@@ -46,7 +46,6 @@ void Server::onReadyRead() {
             qWarning() << "Bad JSON from client, dropping.";
             continue;
         }
-
         // Relay to everyone except the sender
         broadcast(line, socket);
     }
