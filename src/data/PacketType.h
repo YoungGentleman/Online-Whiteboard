@@ -2,6 +2,8 @@
 
 #include <QtGlobal>
 
+constexpr quint32 kMagic = 0x57424F44;
+
 enum class PacketType : quint8
 {
     Snapshot   = 0x01,

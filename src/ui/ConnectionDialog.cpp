@@ -3,6 +3,7 @@
 #include <QFormLayout>
 #include <QVBoxLayout>
 #include <QDialogButtonBox>
+#include <QHostInfo>
 #include <QNetworkInterface>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -25,7 +26,8 @@ void ConnectionDialog::buildHostUi()
     QString localIp = tr("(unavailable)");
     for (const QHostAddress &addr : QNetworkInterface::allAddresses()) {
         if (!addr.isLoopback() && addr.protocol() == QAbstractSocket::IPv4Protocol) {
-            localIp = addr.toString(); break;
+            localIp = addr.toString();
+            break;
         }
     }
 

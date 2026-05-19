@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
 project(Whiteboard
-    VERSION 0.2.0
     DESCRIPTION "Совместная онлайн-доска"
     LANGUAGES CXX
 )
@@ -14,42 +13,48 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Widgets Network)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
 
-qt_standard_project_setup()
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network)
 
-set(SOURCES
-    src/main.cpp
-    src/ui/MainWindow.cpp
-    src/ui/ConnectionDialog.cpp
-    src/data/BoardModel.cpp
-    src/canvas/CanvasView.cpp
-)
-
-set(HEADERS
-    src/ui/MainWindow.h
-    src/ui/ConnectionDialog.h
+add_library(whiteboard_common STATIC
     src/data/DrawObject.h
     src/data/BoardModel.h
+    src/data/BoardModel.cpp
     src/data/Serializer.h
+    src/data/Serializer.cpp
+    src/data/PacketType.h
+    src/network/VectorClock.h
+)
+target_include_directories(whiteboard_common PUBLIC src)
+target_link_libraries(whiteboard_common PUBLIC Qt6::Core Qt6::Gui)
+
+add_executable(whiteboard
+    src/main.cpp
+    src/ui/MainWindow.h
+    src/ui/MainWindow.cpp
+    src/ui/ConnectionDialog.h
+    src/ui/ConnectionDialog.cpp
     src/canvas/CanvasView.h
+    src/canvas/CanvasView.cpp
     src/tools/DrawTool.h
     src/tools/PencilTool.h
     src/tools/ShapeTool.h
     src/tools/EraserTool.h
-    src/tools/FillTool.h
-    src/network/VectorClock.h
-    src/network/PacketType.h
+
+)
+target_link_libraries(whiteboard PRIVATE
+    whiteboard_common
+    Qt6::Widgets
+    Qt6::Network
 )
 
-qt_add_executable(whiteboard ${SOURCES} ${HEADERS})
+if(WIN32)
+    set_target_properties(whiteboard PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
 
-target_include_directories(whiteboard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-
-target_link_libraries(whiteboard PRIVATE
-    Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network)
-
-include(GNUInstallDirs)
-install(TARGETS whiteboard
-    BUNDLE  DESTINATION .
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+if(APPLE)
+    set_target_properties(whiteboard PROPERTIES MACOSX_BUNDLE TRUE)
+endif()
