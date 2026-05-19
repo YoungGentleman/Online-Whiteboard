@@ -3,13 +3,14 @@
 #include <QTcpServer>
 #include <QSet>
 #include <memory>
+#include "../data/BoardModel.h"
 #include <QtConcurrent>
 #include <QThread>
 
 class QTcpSocket;
 
 struct Room{                                                                    // rooms will be processed in peculiar thread
-    QVector<std::shared_ptr<DrawObject>> m_figures;                             // all the user's items they will be uploaded as user connect
+    BoardModel server_board;                                                    // all the user's items they will be uploaded as user connect
     QSet<QTcpSocket*>   m_clients;                                              // all the users in a room
 };
 
@@ -25,7 +26,7 @@ private slots:
     void onDisconnected();
 
 private:
-    void mergeChanges(QByteArray& exclude_data, QTcpSocket *exclude = nullptr); 
+    void mergeChanges(QTcpSocket *exclude = nullptr); 
     void broadcast(const QByteArray& data, QTcpSocket *exclude = nullptr);
     QVector<Room> Rooms;                                                         // all the rooms on the server
     QTcpServer  m_server;

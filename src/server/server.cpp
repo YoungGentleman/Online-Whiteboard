@@ -1,4 +1,4 @@
-#include "chatserver.hpp"
+#include "server.hpp"
 #include <QTcpSocket>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -41,16 +41,20 @@ void Server::onReadyRead() {
 
     while (socket->canReadLine()) {
         QByteArray data = socket->readAll();
+
+        if(data.isEmpty())
+            continue;
+
         qDebug() << "Received:" << data;
 
         QJsonParseError err;
-        
         QJsonDocument::fromJson(data, &err);
 
         if (err.error != QJsonParseError::NoError) {
             qWarning() << "Bad JSON from client, dropping.";
             continue;
         }
+
 
         broadcast(data, socket);
     }

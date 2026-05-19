@@ -1,7 +1,5 @@
 #pragma once
-
 #include "DrawObject.h"
-
 #include <QObject>
 #include <QVector>
 #include <memory>
