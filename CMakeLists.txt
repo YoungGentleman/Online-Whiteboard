@@ -55,7 +55,3 @@ target_link_libraries(whiteboard PRIVATE
 if(WIN32)
     set_target_properties(whiteboard PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
-
-if(APPLE)
-    set_target_properties(whiteboard PROPERTIES MACOSX_BUNDLE TRUE)
-endif()

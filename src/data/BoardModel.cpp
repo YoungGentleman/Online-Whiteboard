@@ -1,5 +1,4 @@
 #include "BoardModel.h"
-
 #include <QDebug>
 
 BoardModel::BoardModel(QObject *parent) : QObject(parent) {}
