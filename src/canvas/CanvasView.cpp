@@ -250,6 +250,8 @@ void CanvasView::mouseReleaseEvent(QMouseEvent *event)
         if (obj) { m_model->addObject(obj); emit objectCreated(obj); }
     }
     QGraphicsView::mouseReleaseEvent(event);
+    if (m_selectMode && event->button() == Qt::LeftButton)
+        commitSelectPositions();
 }
 
 void CanvasView::wheelEvent(QWheelEvent *event)
