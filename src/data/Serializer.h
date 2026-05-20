@@ -6,7 +6,6 @@
 #include <QFile>
 #include <QIODevice>
 #include <QByteArray>
-#include <QDebug>
 #include <memory>
 
 static const quint32 WBD_MAGIC   = 0x57424421;
@@ -26,11 +25,14 @@ public:
 
         switch (obj.type) {
         case ObjectType::Stroke:
-            out << static_cast<const StrokeObject&>(obj).path;   break;
+            out << static_cast<const StrokeObject&>(obj).path;
+            break;
         case ObjectType::Rect:
-            out << static_cast<const RectObject&>(obj).rect;     break;
+            out << static_cast<const RectObject&>(obj).rect;
+            break;
         case ObjectType::Ellipse:
-            out << static_cast<const EllipseObject&>(obj).rect;  break;
+            out << static_cast<const EllipseObject&>(obj).rect;
+            break;
         case ObjectType::Triangle: {
             const auto &t = static_cast<const TriangleObject&>(obj);
             out << t.p1 << t.p2 << t.p3;
@@ -81,7 +83,6 @@ public:
             break;
         }
         default:
-            qWarning() << "[Serializer] unknown object type:" << typeRaw;
             return nullptr;
         }
 
@@ -116,8 +117,7 @@ public:
                            const QVector<std::shared_ptr<DrawObject>> &objects)
     {
         QFile file(path);
-        if (!file.open(QIODevice::WriteOnly))
-            return false;
+        if (!file.open(QIODevice::WriteOnly)) return false;
         QDataStream out(&file);
         out.setVersion(QDataStream::Qt_6_0);
         out << WBD_MAGIC << WBD_VERSION;
@@ -131,14 +131,12 @@ public:
     {
         QVector<std::shared_ptr<DrawObject>> result;
         QFile file(path);
-        if (!file.open(QIODevice::ReadOnly))
-            return result;
+        if (!file.open(QIODevice::ReadOnly)) return result;
         QDataStream in(&file);
         in.setVersion(QDataStream::Qt_6_0);
         quint32 magic; quint8 version;
         in >> magic >> version;
-        if (magic != WBD_MAGIC || version != WBD_VERSION)
-            return result;
+        if (magic != WBD_MAGIC || version != WBD_VERSION) return result;
         quint32 count;
         in >> count;
         for (quint32 i = 0; i < count; ++i) {

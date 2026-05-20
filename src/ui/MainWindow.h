@@ -51,6 +51,8 @@ private slots:
     void onRemoteFill (QUuid uuid, QColor color);
     void onRemoteMove (QUuid uuid, QPointF delta);
     void onRemoteClear();
+    void onUserJoined(int totalCount);
+    void onUserLeft(int totalCount);
 
     void onLocalObjectCreated(std::shared_ptr<DrawObject> obj);
     void onLocalObjectErased (QUuid uuid);
@@ -65,6 +67,8 @@ private:
     void updateWindowTitle(const QString &filename = {});
     void updateColorButton();
     void updateConnectionStatus(const QString &text, bool ok);
+    void refreshConnectionStatus();
+    QString detectLocalIp() const;
 
     void startHosting(quint16 port, const QString &roomName);
     void joinAsClient(const QString &host, quint16 port, const QString &roomName);
@@ -76,6 +80,14 @@ private:
     NetworkManager *m_network     = nullptr;
     Server         *m_localServer = nullptr;
     bool            m_applyingRemote = false;
+
+    QString  m_currentHost;
+    quint16  m_currentPort = 0;
+    QString  m_currentRoom;
+    int      m_userCount   = 0;
+    bool     m_isHostRole  = false;
+    bool     m_intentionalDisconnect = false;
+    bool     m_connectionErrorShown = false;
 
     QLabel   *m_statusTool       = nullptr;
     QLabel   *m_statusZoom       = nullptr;

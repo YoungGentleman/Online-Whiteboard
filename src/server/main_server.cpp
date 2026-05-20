@@ -1,14 +1,22 @@
 #include <QCoreApplication>
 #include <QCommandLineParser>
 #include <QDebug>
+#include <QMetaType>
 
 #include "server.h"
+#include "../network/Protocol.h"
+
+Q_DECLARE_METATYPE(Protocol::Packet)
+Q_DECLARE_METATYPE(QTcpSocket*)
 
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
     app.setApplicationName("whiteboard_server");
     app.setApplicationVersion("0.2");
+
+    qRegisterMetaType<Protocol::Packet>("Protocol::Packet");
+    qRegisterMetaType<QTcpSocket*>("QTcpSocket*");
 
     QCommandLineParser parser;
     parser.setApplicationDescription("Whiteboard collaboration server");

@@ -16,6 +16,8 @@
 #include <QToolBar>
 #include <QStatusBar>
 #include <QMenuBar>
+#include <QHostAddress>
+#include <QNetworkInterface>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -70,6 +72,10 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::onRemoteMove);
     connect(m_network, &NetworkManager::remoteClearReceived,
             this, &MainWindow::onRemoteClear);
+    connect(m_network, &NetworkManager::userJoined,
+            this, &MainWindow::onUserJoined);
+    connect(m_network, &NetworkManager::userLeft,
+            this, &MainWindow::onUserLeft);
 }
 
 MainWindow::~MainWindow()
@@ -215,7 +221,7 @@ void MainWindow::setupStatusBar()
     m_statusZoom = new QLabel("100%");
     m_statusZoom->setMinimumWidth(60);
     m_statusConnection = new QLabel("Оффлайн");
-    m_statusConnection->setMinimumWidth(220);
+    m_statusConnection->setMinimumWidth(380);
     statusBar()->addWidget(m_statusTool);
     statusBar()->addWidget(makeSeparator());
     statusBar()->addWidget(m_statusZoom);
@@ -248,6 +254,33 @@ void MainWindow::updateConnectionStatus(const QString &text, bool ok)
 {
     m_statusConnection->setText(text);
     m_statusConnection->setStyleSheet(ok ? "color: #16803c;" : "color: #b00020;");
+}
+
+void MainWindow::refreshConnectionStatus()
+{
+    if (!m_network->isConnected()) {
+        updateConnectionStatus("Оффлайн", false);
+        return;
+    }
+    QString text;
+    if (m_isHostRole) {
+        const QString ip = detectLocalIp();
+        text = QString("Хост %1:%2 / комната '%3' • %4 чел.")
+                 .arg(ip).arg(m_currentPort).arg(m_currentRoom).arg(m_userCount);
+    } else {
+        text = QString("Клиент → %1:%2 / комната '%3' • %4 чел.")
+                 .arg(m_currentHost).arg(m_currentPort).arg(m_currentRoom).arg(m_userCount);
+    }
+    updateConnectionStatus(text, true);
+}
+
+QString MainWindow::detectLocalIp() const
+{
+    for (const QHostAddress &addr : QNetworkInterface::allAddresses()) {
+        if (!addr.isLoopback() && addr.protocol() == QAbstractSocket::IPv4Protocol)
+            return addr.toString();
+    }
+    return "127.0.0.1";
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -348,8 +381,6 @@ void MainWindow::onJoinRoom()
 void MainWindow::onLeaveRoom()
 {
     teardownNetwork();
-    updateConnectionStatus("Оффлайн", false);
-    m_actLeaveRoom->setEnabled(false);
 }
 
 void MainWindow::startHosting(quint16 port, const QString &roomName)
@@ -358,13 +389,21 @@ void MainWindow::startHosting(quint16 port, const QString &roomName)
 
     m_localServer = new Server(port, this);
     if (!m_localServer->isListening()) {
-        QMessageBox::critical(this, "Ошибка",
+        QMessageBox::critical(this, "Ошибка хоста",
             QString("Не удалось открыть порт %1.\n"
                     "Возможно, порт уже занят другим приложением.").arg(port));
         m_localServer->deleteLater();
         m_localServer = nullptr;
         return;
     }
+
+    m_isHostRole  = true;
+    m_currentHost = "127.0.0.1";
+    m_currentPort = port;
+    m_currentRoom = roomName;
+    m_userCount   = 0;
+    m_intentionalDisconnect = false;
+    m_connectionErrorShown  = false;
 
     updateConnectionStatus(QString("Хост: запуск (порт %1, '%2')…")
                                .arg(port).arg(roomName), true);
@@ -377,41 +416,95 @@ void MainWindow::joinAsClient(const QString &host, quint16 port, const QString &
     m_applyingRemote = true;
     m_model->clear();
     m_applyingRemote = false;
+
+    m_isHostRole  = false;
+    m_currentHost = host;
+    m_currentPort = port;
+    m_currentRoom = roomName;
+    m_userCount   = 0;
+    m_intentionalDisconnect = false;
+    m_connectionErrorShown  = false;
+
     updateConnectionStatus(QString("Подключение к %1:%2…").arg(host).arg(port), true);
     m_network->connectToServer(host, port, roomName);
 }
 
 void MainWindow::teardownNetwork()
 {
-    if (m_network && m_network->isConnected())
+    if (m_network && m_network->isConnected()) {
+        m_intentionalDisconnect = true;
         m_network->disconnectFromServer();
+    }
     if (m_localServer) {
         m_localServer->deleteLater();
         m_localServer = nullptr;
     }
+    m_userCount = 0;
 }
 
 void MainWindow::onNetConnected()
 {
-    const QString role = m_localServer ? "Хост" : "Клиент";
-    updateConnectionStatus(QString("%1: подключён").arg(role), true);
     m_actLeaveRoom->setEnabled(true);
+    refreshConnectionStatus();
 
-    if (m_localServer) {
+    if (m_isHostRole) {
+        const QString ip = detectLocalIp();
+        QMessageBox::information(this, "Комната создана",
+            QString("Сервер запущен.\n\n"
+                    "Локальный IP: %1\nПорт: %2\nКомната: %3\n\n"
+                    "Поделитесь этими данными с другими участниками.")
+                .arg(ip).arg(m_currentPort).arg(m_currentRoom));
         for (const auto &obj : m_model->objects())
             m_network->sendDraw(obj);
+    } else {
+        QMessageBox::information(this, "Подключено",
+            QString("Успешное подключение к серверу.\n\n"
+                    "Хост: %1\nПорт: %2\nКомната: %3")
+                .arg(m_currentHost).arg(m_currentPort).arg(m_currentRoom));
     }
 }
 
 void MainWindow::onNetDisconnected()
 {
-    updateConnectionStatus("Оффлайн", false);
+    const bool suppress = m_intentionalDisconnect || m_connectionErrorShown;
+    m_intentionalDisconnect = false;
+    m_connectionErrorShown  = false;
     m_actLeaveRoom->setEnabled(false);
+    m_userCount = 0;
+    updateConnectionStatus("Оффлайн", false);
+
+    if (!suppress)
+        QMessageBox::warning(this, "Соединение потеряно",
+            "Связь с сервером прервана.\n"
+            "Возможно, сервер был остановлен или хост покинул комнату.");
 }
 
 void MainWindow::onNetError(const QString &msg)
 {
     updateConnectionStatus(QString("Ошибка: %1").arg(msg), false);
+    if (!m_network->isConnected() && !m_connectionErrorShown) {
+        m_connectionErrorShown = true;
+        QMessageBox::warning(this, "Ошибка подключения",
+            QString("Не удалось подключиться:\n%1").arg(msg));
+    }
+}
+
+void MainWindow::onUserJoined(int totalCount)
+{
+    const bool isMyArrival = (m_userCount == 0);
+    m_userCount = totalCount;
+    refreshConnectionStatus();
+    if (!isMyArrival)
+        statusBar()->showMessage(
+            QString("➕ Новый участник в комнате (всего %1)").arg(totalCount), 4000);
+}
+
+void MainWindow::onUserLeft(int totalCount)
+{
+    m_userCount = totalCount;
+    refreshConnectionStatus();
+    statusBar()->showMessage(
+        QString("➖ Участник вышел (осталось %1)").arg(totalCount), 4000);
 }
 
 void MainWindow::onSnapshotReceived(QVector<std::shared_ptr<DrawObject>> objects)

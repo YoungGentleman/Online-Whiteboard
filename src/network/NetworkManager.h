@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QTimer>
 #include <QByteArray>
 #include <QUuid>
 #include <QVector>
@@ -9,8 +10,10 @@
 #include <QPointF>
 #include <memory>
 
-#include "PacketType.h"
+#include "../data/PacketType.h"
+#include "../data/Serializer.h"
 #include "Protocol.h"
+#include "VectorClock.h"
 
 class DrawObject;
 
@@ -24,6 +27,9 @@ public:
                          const QString &roomName = "default");
     void disconnectFromServer();
     bool isConnected() const;
+
+    void setNodeId(int id) { m_nodeId = id; m_clock.resize(id + 1); }
+    int  nodeId()    const { return m_nodeId; }
 
 public slots:
     void sendDraw (const std::shared_ptr<DrawObject> &obj);
@@ -43,18 +49,26 @@ signals:
     void remoteMoveReceived  (QUuid uuid, QPointF delta);
     void remoteClearReceived ();
     void snapshotReceived    (QVector<std::shared_ptr<DrawObject>> objects);
+    void userJoined          (int totalCount);
+    void userLeft            (int totalCount);
 
 private slots:
     void onConnected();
     void onDisconnected();
     void onReadyRead();
     void onErrorOccurred(QAbstractSocket::SocketError err);
+    void onHandshakeTimeout();
 
 private:
     void sendPacket(PacketType type, const QByteArray &payload);
     void handlePacket(const Protocol::Packet &packet);
 
-    QTcpSocket m_socket;
-    QByteArray m_buffer;
-    QString    m_roomName = "default";
+    QTcpSocket  m_socket;
+    QByteArray  m_buffer;
+    QString     m_roomName    = "default";
+    QTimer      m_handshakeTimer;
+    bool        m_handshakeDone = false;
+
+    VectorClock m_clock;
+    int         m_nodeId = 0;
 };

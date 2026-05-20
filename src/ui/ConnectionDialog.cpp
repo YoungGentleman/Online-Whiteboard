@@ -54,6 +54,9 @@ void ConnectionDialog::buildHostUi()
     form->addRow(tr("Порт:"), m_hostPort);
 
     m_hostRoom = new QLineEdit("default");
+    m_hostRoom->setToolTip(tr(
+        "На одном сервере может быть много комнат с разными именами.\n"
+        "Все, кто введёт это имя при подключении, попадут в эту комнату."));
     form->addRow(tr("Имя комнаты:"), m_hostRoom);
 
     layout->addLayout(form);
@@ -94,6 +97,10 @@ void ConnectionDialog::buildClientUi()
     form->addRow(tr("Порт:"), m_clientPort);
 
     m_clientRoom = new QLineEdit("default");
+    m_clientRoom->setToolTip(tr(
+        "Введите имя нужной комнаты.\n"
+        "Один сервер обслуживает много комнат — клиенты с одинаковым\n"
+        "именем оказываются на общей доске."));
     form->addRow(tr("Имя комнаты:"), m_clientRoom);
 
     layout->addLayout(form);

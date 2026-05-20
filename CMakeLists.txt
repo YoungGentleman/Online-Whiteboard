@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
-project(Whiteboard VERSION 0.2 LANGUAGES CXX)
+project(Whiteboard VERSION 0.2.0 LANGUAGES CXX)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,10 +21,9 @@ add_library(whiteboard_common STATIC
     src/data/BoardModel.h
     src/data/BoardModel.cpp
     src/data/Serializer.h
-    src/network/PacketType.h
-    src/network/Protocol.h
-    src/network/Protocol.cpp
+    src/data/PacketType.h
     src/network/VectorClock.h
+    src/network/Protocol.h
 )
 target_include_directories(whiteboard_common PUBLIC src)
 target_link_libraries(whiteboard_common PUBLIC Qt6::Core Qt6::Gui Qt6::Network)
@@ -65,3 +65,33 @@ target_link_libraries(whiteboard_server PRIVATE
 if(WIN32)
     set_target_properties(whiteboard PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
+if(APPLE)
+    set_target_properties(whiteboard PROPERTIES MACOSX_BUNDLE TRUE)
+endif()
+
+include(GNUInstallDirs)
+install(TARGETS whiteboard
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    BUNDLE  DESTINATION .
+)
+install(TARGETS whiteboard_server
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+# ── CPack / deb ────────────────────────────────────────────────────────────
+set(CPACK_PACKAGE_NAME            "whiteboard")
+set(CPACK_PACKAGE_VERSION         "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_CONTACT         "whiteboard@example.com")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Collaborative whiteboard application")
+set(CPACK_PACKAGE_VENDOR          "WhiteboardTeam")
+
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER  "WhiteboardTeam <whiteboard@example.com>")
+set(CPACK_DEBIAN_PACKAGE_SECTION     "utils")
+set(CPACK_DEBIAN_PACKAGE_PRIORITY    "optional")
+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS
+    "libqt6core6, libqt6gui6, libqt6widgets6, libqt6network6, libxcb-cursor0")
+
+set(CPACK_GENERATOR "DEB")
+
+include(CPack)
