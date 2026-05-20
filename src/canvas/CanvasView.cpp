@@ -51,6 +51,7 @@ CanvasView::CanvasView(BoardModel *model, QWidget *parent)
     connect(m_model, &BoardModel::objectAdded,   this, &CanvasView::onObjectAdded);
     connect(m_model, &BoardModel::objectRemoved, this, &CanvasView::onObjectRemoved);
     connect(m_model, &BoardModel::objectFilled,  this, &CanvasView::onObjectFilled);
+    connect(m_model, &BoardModel::objectMoved,   this, &CanvasView::onObjectMoved);
     connect(m_model, &BoardModel::boardCleared,  this, &CanvasView::onBoardCleared);
 
     setToolPencil();
@@ -58,38 +59,37 @@ CanvasView::CanvasView(BoardModel *model, QWidget *parent)
 
 void CanvasView::commitSelectPositions()
 {
+    QList<std::pair<QUuid, QPointF>> moves;
     for (auto it = m_itemMap.begin(); it != m_itemMap.end(); ++it) {
-        QGraphicsItem *item = it.value();
-        QPointF delta = item->pos();
-        if (delta.isNull()) continue;
+        QPointF delta = it.value()->pos();
+        if (!delta.isNull())
+            moves.append({it.key(), delta});
+    }
+    for (const auto &m : moves)
+        m_model->updateObjectPosition(m.first, m.second);
+}
 
-        m_model->updateObjectPosition(it.key(), delta);
-
-        auto obj = m_model->findByUuid(it.key());
-        if (obj) {
-            switch (obj->type) {
-            case ObjectType::Stroke:
-                static_cast<QGraphicsPathItem*>(item)
-                    ->setPath(static_cast<StrokeObject*>(obj.get())->path);
-                break;
-            case ObjectType::Rect:
-                static_cast<QGraphicsRectItem*>(item)
-                    ->setRect(static_cast<RectObject*>(obj.get())->rect);
-                break;
-            case ObjectType::Ellipse:
-                static_cast<QGraphicsEllipseItem*>(item)
-                    ->setRect(static_cast<EllipseObject*>(obj.get())->rect);
-                break;
-            case ObjectType::Triangle: {
-                auto *t = static_cast<TriangleObject*>(obj.get());
-                QPolygonF poly; poly << t->p1 << t->p2 << t->p3;
-                static_cast<QGraphicsPolygonItem*>(item)->setPolygon(poly);
-                break;
-            }
-            }
-        }
-
-        item->setPos(0, 0);
+void CanvasView::syncItemGeometry(QGraphicsItem *item, const std::shared_ptr<DrawObject> &obj)
+{
+    switch (obj->type) {
+    case ObjectType::Stroke:
+        static_cast<QGraphicsPathItem*>(item)
+            ->setPath(static_cast<StrokeObject*>(obj.get())->path);
+        break;
+    case ObjectType::Rect:
+        static_cast<QGraphicsRectItem*>(item)
+            ->setRect(static_cast<RectObject*>(obj.get())->rect);
+        break;
+    case ObjectType::Ellipse:
+        static_cast<QGraphicsEllipseItem*>(item)
+            ->setRect(static_cast<EllipseObject*>(obj.get())->rect);
+        break;
+    case ObjectType::Triangle: {
+        auto *t = static_cast<TriangleObject*>(obj.get());
+        QPolygonF poly; poly << t->p1 << t->p2 << t->p3;
+        static_cast<QGraphicsPolygonItem*>(item)->setPolygon(poly);
+        break;
+    }
     }
 }
 
@@ -293,6 +293,16 @@ void CanvasView::onObjectFilled(QUuid uuid, QColor color)
         e->setBrush(brush);
     else if (auto *p = dynamic_cast<QGraphicsPolygonItem*>(it.value()))
         p->setBrush(brush);
+}
+
+void CanvasView::onObjectMoved(QUuid uuid, QPointF )
+{
+    auto it = m_itemMap.find(uuid);
+    if (it == m_itemMap.end()) return;
+    auto obj = m_model->findByUuid(uuid);
+    if (!obj) return;
+    syncItemGeometry(it.value(), obj);
+    it.value()->setPos(0, 0);
 }
 
 void CanvasView::onBoardCleared()

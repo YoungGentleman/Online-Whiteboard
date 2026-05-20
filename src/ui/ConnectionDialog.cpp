@@ -30,8 +30,7 @@ void ConnectionDialog::buildHostUi()
     layout->setSpacing(12);
 
     QString localIp = tr("(недоступен)");
-    const auto ifaces = QNetworkInterface::allAddresses();
-    for (const QHostAddress &addr : ifaces) {
+    for (const QHostAddress &addr : QNetworkInterface::allAddresses()) {
         if (!addr.isLoopback() && addr.protocol() == QAbstractSocket::IPv4Protocol) {
             localIp = addr.toString();
             break;
@@ -60,7 +59,7 @@ void ConnectionDialog::buildHostUi()
     layout->addLayout(form);
 
     auto *note = new QLabel(tr(
-        "<i>Поделитесь IP и портом с участниками.<br>"
+        "<i>Поделитесь IP, портом и именем комнаты с участниками.<br>"
         "Для LAN — локальный IP.<br>"
         "Для Internet — внешний IP + проброс порта на роутере.</i>"));
     note->setWordWrap(true);
@@ -107,8 +106,6 @@ void ConnectionDialog::buildClientUi()
     layout->addWidget(btnBox);
 }
 
-// ---------------------------------------------------------------------------
-
 void ConnectionDialog::onConfirm()
 {
     if (m_mode == Mode::Client && m_editIp && m_editIp->text().trimmed().isEmpty()) {
@@ -138,7 +135,6 @@ void ConnectionDialog::onFetchPublicIp()
     });
 }
 
-
 QString ConnectionDialog::hostAddress() const
 {
     if (m_mode == Mode::Client && m_editIp)
@@ -155,7 +151,13 @@ int ConnectionDialog::port() const
 
 QString ConnectionDialog::roomName() const
 {
-    if (m_mode == Mode::Host   && m_hostRoom)   return m_hostRoom->text().trimmed();
-    if (m_mode == Mode::Client && m_clientRoom) return m_clientRoom->text().trimmed();
+    if (m_mode == Mode::Host   && m_hostRoom) {
+        const QString r = m_hostRoom->text().trimmed();
+        return r.isEmpty() ? QStringLiteral("default") : r;
+    }
+    if (m_mode == Mode::Client && m_clientRoom) {
+        const QString r = m_clientRoom->text().trimmed();
+        return r.isEmpty() ? QStringLiteral("default") : r;
+    }
     return QStringLiteral("default");
 }

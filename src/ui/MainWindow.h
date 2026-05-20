@@ -29,31 +29,33 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private slots:
-    void onNewBoard();                                          // menu File
+    void onNewBoard();
     void onOpenFile();
     void onSaveFile();
 
-    void onCreateRoom();                                        // menu NEtwork 
+    void onCreateRoom();
     void onJoinRoom();
     void onLeaveRoom();
 
     void onAbout();
-
     void onColorButtonClicked();
     void onPenWidthChanged(int value);
     void onClearBoard();
 
-
-    void onNetConnected();                                      // Network
+    void onNetConnected();
     void onNetDisconnected();
     void onNetError(const QString &msg);
     void onSnapshotReceived(QVector<std::shared_ptr<DrawObject>> objects);
     void onRemoteDraw (std::shared_ptr<DrawObject> obj);
     void onRemoteErase(QUuid uuid);
+    void onRemoteFill (QUuid uuid, QColor color);
+    void onRemoteMove (QUuid uuid, QPointF delta);
     void onRemoteClear();
 
     void onLocalObjectCreated(std::shared_ptr<DrawObject> obj);
     void onLocalObjectErased (QUuid uuid);
+    void onLocalObjectFilled (QUuid uuid, QColor color);
+    void onLocalObjectMoved  (QUuid uuid, QPointF delta);
 
 private:
     void setupMenuBar();
@@ -71,20 +73,21 @@ private:
     BoardModel  *m_model  = nullptr;
     CanvasView  *m_canvas = nullptr;
 
-    NetworkManager *m_network = nullptr;
-    Server         *m_localServer = nullptr;   
-
-    bool m_applyingRemote = false;
+    NetworkManager *m_network     = nullptr;
+    Server         *m_localServer = nullptr;
+    bool            m_applyingRemote = false;
 
     QLabel   *m_statusTool       = nullptr;
     QLabel   *m_statusZoom       = nullptr;
     QLabel   *m_statusConnection = nullptr;
 
+    QAction  *m_actSelect    = nullptr;
     QAction  *m_actPencil    = nullptr;
     QAction  *m_actRect      = nullptr;
     QAction  *m_actEllipse   = nullptr;
     QAction  *m_actTriangle  = nullptr;
     QAction  *m_actEraser    = nullptr;
+    QAction  *m_actFill      = nullptr;
 
     QAction  *m_actLeaveRoom = nullptr;
 

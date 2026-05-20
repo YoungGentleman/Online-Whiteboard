@@ -1,9 +1,11 @@
 #pragma once
 
-#include "../data/PacketType.h"
+#include "PacketType.h"
 #include <QByteArray>
 
 namespace Protocol {
+
+constexpr quint32 kMagic = 0x57424F44;
 
 struct Packet {
     PacketType type{};
@@ -11,7 +13,6 @@ struct Packet {
 };
 
 QByteArray makePacket(PacketType type, const QByteArray &payload);
+bool       tryExtractPacket(QByteArray &buffer, Packet &outPacket);
 
-bool tryExtractPacket(QByteArray &buffer, Packet &outPacket);
-
-} // namespace Protocol
+}

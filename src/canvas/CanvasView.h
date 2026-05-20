@@ -46,6 +46,7 @@ public slots:
     void onObjectAdded(std::shared_ptr<DrawObject> obj);
     void onObjectRemoved(QUuid uuid);
     void onObjectFilled(QUuid uuid, QColor color);
+    void onObjectMoved(QUuid uuid, QPointF delta);
     void onBoardCleared();
 
 protected:
@@ -56,6 +57,7 @@ protected:
 
 private:
     QGraphicsItem* addItemForObject(std::shared_ptr<DrawObject> obj);
+    void           syncItemGeometry(QGraphicsItem *item, const std::shared_ptr<DrawObject> &obj);
     void           applyZoom(double factor);
     void           commitSelectPositions();
     void           setItemsMovable(bool movable);

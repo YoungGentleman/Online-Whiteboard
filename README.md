@@ -39,10 +39,3 @@ cmake --build build --parallel
 ```bash
 ./build/whiteboard
 ```
-
-### 5. Если Qt не найден
-
-```bash
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_PREFIX_PATH=~/Qt/6.7.0/gcc_64
-```

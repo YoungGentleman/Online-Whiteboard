@@ -1,9 +1,5 @@
-cmake_minimum_required(VERSION 3.22)
-
-project(Whiteboard
-    DESCRIPTION "Совместная онлайн-доска"
-    LANGUAGES CXX
-)
+cmake_minimum_required(VERSION 3.16)
+project(Whiteboard VERSION 0.2 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -24,12 +20,13 @@ add_library(whiteboard_common STATIC
     src/data/BoardModel.h
     src/data/BoardModel.cpp
     src/data/Serializer.h
-    src/data/Serializer.cpp
-    src/data/PacketType.h
+    src/network/PacketType.h
+    src/network/Protocol.h
+    src/network/Protocol.cpp
     src/network/VectorClock.h
 )
 target_include_directories(whiteboard_common PUBLIC src)
-target_link_libraries(whiteboard_common PUBLIC Qt6::Core Qt6::Gui)
+target_link_libraries(whiteboard_common PUBLIC Qt6::Core Qt6::Gui Qt6::Network)
 
 add_executable(whiteboard
     src/main.cpp
@@ -42,13 +39,26 @@ add_executable(whiteboard
     src/tools/DrawTool.h
     src/tools/PencilTool.h
     src/tools/ShapeTool.h
-    src/tools/FillTool.h
     src/tools/EraserTool.h
-
+    src/tools/FillTool.h
+    src/network/NetworkManager.h
+    src/network/NetworkManager.cpp
+    src/server/server.h
+    src/server/server.cpp
 )
 target_link_libraries(whiteboard PRIVATE
     whiteboard_common
     Qt6::Widgets
+    Qt6::Network
+)
+
+add_executable(whiteboard_server
+    src/server/main_server.cpp
+    src/server/server.h
+    src/server/server.cpp
+)
+target_link_libraries(whiteboard_server PRIVATE
+    whiteboard_common
     Qt6::Network
 )
 

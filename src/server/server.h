@@ -1,23 +1,36 @@
 #pragma once
+
 #include <QObject>
 #include <QTcpServer>
-#include <QSet>
+#include <QTcpSocket>
+#include <QHash>
+#include <QList>
+#include <QString>
+#include <QByteArray>
 #include <memory>
-#include "../data/BoardModel.h"
-#include <QtConcurrent>
-#include <QThread>
 
-class QTcpSocket;
+#include "../data/DrawObject.h"
+#include "../network/Protocol.h"
 
-struct Room{                                                                    // rooms will be processed in peculiar thread
-    BoardModel server_board;                                                    // all the user's items they will be uploaded as user connect
-    QSet<QTcpSocket*> m_clients;                                                // all the users in a room
+struct ClientState {
+    QString    roomName;
+    QByteArray buffer;
 };
 
-class Server : public QObject {
+struct Room {
+    QList<QTcpSocket*>                   clients;
+    QVector<std::shared_ptr<DrawObject>> objects;
+};
+
+class Server : public QObject
+{
     Q_OBJECT
 public:
     explicit Server(quint16 port, QObject *parent = nullptr);
+    ~Server() override;
+
+    bool    isListening() const { return m_server.isListening(); }
+    quint16 port()        const { return m_server.serverPort(); }
 
 private slots:
     void onNewConnection();
@@ -25,7 +38,13 @@ private slots:
     void onDisconnected();
 
 private:
-    void broadcast(const QByteArray& data, QTcpSocket *exclude = nullptr);
-    QVector<Room> rooms;                                                        // all the rooms on the server
-    QTcpServer  m_server;
+    void handlePacket(QTcpSocket *socket, const Protocol::Packet &packet);
+    void sendSnapshot(QTcpSocket *socket, const QString &roomName);
+    void broadcast(const QString &roomName,
+                   const QByteArray &frame,
+                   QTcpSocket *exclude = nullptr);
+
+    QTcpServer                      m_server;
+    QHash<QString, Room>            m_rooms;
+    QHash<QTcpSocket*, ClientState> m_clients;
 };

@@ -1,20 +1,14 @@
 #include <QCoreApplication>
 #include <QCommandLineParser>
 #include <QDebug>
-#include <QMetaType>
-#include <memory>
 
-#include "Server.h"
-#include "../data/DrawObject.h"
+#include "server.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-
-    qRegisterMetaType<std::shared_ptr<DrawObject>>("std::shared_ptr<DrawObject>");
-    qRegisterMetaType<QUuid>("QUuid");
     app.setApplicationName("whiteboard_server");
-    app.setApplicationVersion("0.1");
+    app.setApplicationVersion("0.2");
 
     QCommandLineParser parser;
     parser.setApplicationDescription("Whiteboard collaboration server");

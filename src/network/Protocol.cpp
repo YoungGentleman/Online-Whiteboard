@@ -1,4 +1,5 @@
 #include "Protocol.h"
+
 #include <QDataStream>
 #include <QIODevice>
 #include <QDebug>
@@ -29,8 +30,8 @@ bool tryExtractPacket(QByteArray &buffer, Packet &outPacket)
     QDataStream in(buffer);
     in.setVersion(QDataStream::Qt_6_0);
 
-    quint32 magic   = 0;
-    quint8  type    = 0;
+    quint32 magic       = 0;
+    quint8  type        = 0;
     quint32 payloadSize = 0;
     in >> magic >> type >> payloadSize;
 
@@ -48,7 +49,7 @@ bool tryExtractPacket(QByteArray &buffer, Packet &outPacket)
 
     const int totalSize = kHeaderSize + int(payloadSize);
     if (buffer.size() < totalSize)
-        return false;  // ждём дочитку
+        return false;
 
     outPacket.type    = PacketType(type);
     outPacket.payload = buffer.mid(kHeaderSize, int(payloadSize));
@@ -56,4 +57,4 @@ bool tryExtractPacket(QByteArray &buffer, Packet &outPacket)
     return true;
 }
 
-} // namespace Protocol
+}

@@ -1,5 +1,4 @@
 #include "BoardModel.h"
-#include <QDebug>
 
 BoardModel::BoardModel(QObject *parent) : QObject(parent) {}
 
@@ -24,7 +23,7 @@ void BoardModel::removeObject(const QUuid &uuid, bool fromNetwork)
     }
 }
 
-void BoardModel::fillObject(const QUuid &uuid, const QColor &color)
+void BoardModel::fillObject(const QUuid &uuid, const QColor &color, bool fromNetwork)
 {
     auto obj = findByUuid(uuid);
     if (!obj || obj->type == ObjectType::Stroke)
@@ -32,29 +31,25 @@ void BoardModel::fillObject(const QUuid &uuid, const QColor &color)
     obj->filled    = true;
     obj->fillColor = color;
     emit objectFilled(uuid, color);
+    if (!fromNetwork)
+        emit localObjectFilled(uuid, color);
 }
 
-void BoardModel::updateObjectPosition(const QUuid &uuid, const QPointF &delta)
+void BoardModel::updateObjectPosition(const QUuid &uuid, const QPointF &delta, bool fromNetwork)
 {
     auto obj = findByUuid(uuid);
     if (!obj) return;
 
     switch (obj->type) {
-    case ObjectType::Stroke: {
-        auto *s = static_cast<StrokeObject*>(obj.get());
-        s->path.translate(delta);
+    case ObjectType::Stroke:
+        static_cast<StrokeObject*>(obj.get())->path.translate(delta);
         break;
-    }
-    case ObjectType::Rect: {
-        auto *r = static_cast<RectObject*>(obj.get());
-        r->rect.translate(delta);
+    case ObjectType::Rect:
+        static_cast<RectObject*>(obj.get())->rect.translate(delta);
         break;
-    }
-    case ObjectType::Ellipse: {
-        auto *e = static_cast<EllipseObject*>(obj.get());
-        e->rect.translate(delta);
+    case ObjectType::Ellipse:
+        static_cast<EllipseObject*>(obj.get())->rect.translate(delta);
         break;
-    }
     case ObjectType::Triangle: {
         auto *t = static_cast<TriangleObject*>(obj.get());
         t->p1 += delta;
@@ -63,6 +58,10 @@ void BoardModel::updateObjectPosition(const QUuid &uuid, const QPointF &delta)
         break;
     }
     }
+
+    emit objectMoved(uuid, delta);
+    if (!fromNetwork)
+        emit localObjectMoved(uuid, delta);
 }
 
 void BoardModel::clear()
